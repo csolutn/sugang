@@ -453,6 +453,9 @@
     이 페이지는 <b>가상의 수강신청 연습</b>입니다. 실제 수강신청은 리로스쿨 &gt; 교육과정 &gt; 수강신청에서 진행합니다.
     학교 지정 과목(필수)은 별도로 선택하지 않으며, 위 조건의 과목 수에 포함되지 않습니다.
   </p>
+    <p class="note">
+    실제 수강신청은 <b? 학년 단위 </b>로 이루어집니다.
+  </p>
 
 </div>
 
@@ -558,7 +561,7 @@ const SEMESTERS = [
         ["과학의 역사와 문화","sayung"],["기후변화와 환경생태","sayung"] ] },
       { subject:"기술·가정/정보", courses:[ ["지식 재산 일반","yunghap"] ] },
       { subject:"제2외국어/한문", courses:[ ["스페인어권 문화","yunghap"],["심화 일본어","jinro"] ] },
-      { subject:"예술", courses:[ ["음악콘텐츠 제작 기초","jinro"],["조형","jinro"] ] },
+      { subject:"예술", courses:[ ["음악콘텐츠 제작 기초","jinro"],["조형탐구1(변경예정)","jinro"] ] },
     ]
   },
 ];
@@ -773,13 +776,13 @@ async function exportPDF(){
     const y = margin;                    // 상단 정렬
 
     pdf.addImage(imgData, "JPEG", x, y, drawW, drawH);
-    // 파일명: [학번이름]선택과목 로드맵_YYMMDD  (예: [10101김경기]선택과목 로드맵_260622)
+    // 파일명: [학번이름]선택과목 시뮬레이션_YYMMDD  (예: [10101김경기]선택과목 시뮬레이션_260622)
     const idName = (who.value || "").trim().replace(/\s+/g, ""); // 공백 제거
     const d = new Date();
     const yymmdd = String(d.getFullYear()).slice(2)
                  + String(d.getMonth() + 1).padStart(2, "0")
                  + String(d.getDate()).padStart(2, "0");
-    const fname = `${idName ? "[" + idName + "]" : ""}선택과목 로드맵_${yymmdd}`
+    const fname = `${idName ? "[" + idName + "]" : ""}선택과목 시뮬레이션_${yymmdd}`
                     .replace(/[\\/:*?"<>|]/g, "_");  // 파일명 사용 불가 문자만 치환
     pdf.save(fname + ".pdf");
   } catch(e){
