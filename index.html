@@ -922,6 +922,8 @@
       padding:6px clamp(9px, 2.8vw, 13px);
     }
   }
+/* 날짜 표시 영역 초기 숨김 */
+#today { display: none; }
 </style>
 
 </head>
@@ -934,7 +936,7 @@
     <header class="masthead">
       <div>
         <div class="eyebrow">
-          <span>경기여자고등학교 · 나의 진로설계와 수강신청 </span>
+          <span>경기여자고등학교 · 나의 진로설계와 수강신청 &nbsp;<span class="date" id="today"></span></span>
         </div>
         <h1><span class="yr">2026</span> 수강신청 로드맵</h1>
       </div>
@@ -1862,6 +1864,7 @@ function tokenRole(token){
 }
 
 // 로그인 상태 UI 반영
+// [수정] 로그인 상태 UI 반영 및 날짜 표시 제어
 function applyAuthState(){
   const loggedIn = !!authToken;
   const isAdmin = loggedIn && authUser && authUser.role === "admin";
@@ -1869,15 +1872,24 @@ function applyAuthState(){
   document.body.classList.toggle("admin-mode", isAdmin);
   document.getElementById("userInfo").classList.toggle("on", loggedIn);
   document.getElementById("loginFormWrap").style.display = loggedIn ? "none" : "";
+  
   // 학생용 버튼은 admin이 아닐 때만
   document.getElementById("saveBtn").style.display   = (loggedIn && !isAdmin) ? "" : "none";
   document.getElementById("loadBtn").style.display   = (loggedIn && !isAdmin) ? "" : "none";
   document.getElementById("submitBtn").style.display = (loggedIn && !isAdmin) ? "" : "none";
 
+  // [수정] 날짜 표시 제어
+  const todayEl = document.getElementById("today");
+  if(loggedIn) {
+    todayEl.style.display = "inline"; // 로그인 시에만 표시
+  } else {
+    todayEl.style.display = "none";   // 비로그인 시 숨김
+  }
+
   if(loggedIn && authUser){
     const who = isAdmin ? "관리자" : `${authUser.sid} ${authUser.name}`;
     document.getElementById("userGreeting").innerHTML =
-      `<b>${who}</b>&nbsp;<span class="greeting"> 접속 중  &nbsp;<span class="date" id="today"></span></span>`;
+      `<b>${who}</b>&nbsp;<span class="greeting"> 접속 중</span>`;
   }
   if(isAdmin) initAdminPanel();
 }
