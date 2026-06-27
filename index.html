@@ -942,8 +942,8 @@
 
 <div class="toolbar no-print">
   <button class="btn btn-ghost" id="resetBtn" type="button">
-    <span class="d-txt">초기화</span>
-    <span class="m-txt" style="letter-spacing:-0.05em;">초기화</span>
+    <span class="d-txt">전체초기화</span>
+    <span class="m-txt" style="letter-spacing:-0.05em;">전체<br>초기화</span>
   </button>
   <button class="btn btn-ghost" id="loadBtn" type="button" style="display:none">
     <span class="d-txt">불러오기</span>
@@ -1962,7 +1962,7 @@ document.getElementById("submitBtn").addEventListener("click", async () => {
 
   // 조건 미충족이면 제출 불가
   if(!isComplete){
-    alert("모든 조건(학기별 과목 수, 교과군 필수요건)을 충족해야 제출할 수 있습니다.\n임시저장 후 조건을 채워 다시 제출해 주세요.");
+    alert("모든 조건(학기별 과목 수, 교과군 필수요건)을 충족해야 제출할 수 있습니다.");
     return;
   }
 
