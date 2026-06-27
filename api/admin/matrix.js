@@ -87,6 +87,7 @@ export default async function handler(req, res){
     const cls = req.query.cls;  // 예: "101"
     if (!cls) return res.status(400).json({ error: "학급(cls)을 지정하세요." });
 
+    // ① 학생 명단 (해당 반만)
     const roster = await stuCol
       .find({ role: "student" }, { projection: { sid: 1, name: 1 } })
       .toArray();
@@ -94,14 +95,31 @@ export default async function handler(req, res){
       .filter(s => String(s.sid).slice(0, 3) === cls && !isTest(s.sid))
       .sort((a, b) => String(a.sid).localeCompare(String(b.sid)));
 
+    // ② 제출 현황 (submissions) — cls 필터로 해당 반만 조회
     const subs = await subCol.find({ cls }).toArray();
     const subMap = {};
     subs.forEach(s => { if (!isTest(s.sid)) subMap[s.sid] = s; });
 
+    // ③ 임시저장 현황 (roadmaps) — 해당 반 학번(101XX~113XX) 범위만 조회
+    //    sid 정규식으로 DB 레벨에서 필터링해 서버 부하 최소화
+    const rdCol = db.collection("roadmaps");
+    const rdDocs = await rdCol
+      .find(
+        { sid: { $regex: `^${cls}` } },       // 예: ^101 → 10101~10135...
+        { projection: { sid: 1, _id: 0 } }    // sid만 가져오면 충분
+      )
+      .toArray();
+    // 학번 → 임시저장 존재 여부 Map
+    const rdSet = new Set(rdDocs.map(r => r.sid));
+
+    // ④ status 판정
+    //    complete = submissions 있음 (제출 = 무조건 조건충족)
+    //    draft    = roadmaps 있음 + submissions 없음 (임시저장만)
+    //    none     = 둘 다 없음
     const students = inClass.map(s => {
-      const sub = subMap[s.sid];
       let status = "none";
-      if (sub) status = sub.isComplete ? "complete" : "draft";
+      if (subMap[s.sid])      status = "complete";
+      else if (rdSet.has(s.sid)) status = "draft";
       return { sid: s.sid, name: s.name, status };
     });
 
