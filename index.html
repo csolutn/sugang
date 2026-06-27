@@ -154,10 +154,6 @@
     background:none; border:none; font-size:18px; cursor:pointer; color:var(--ink-soft);
   }
 
-  /* 저장/불러오기 버튼 (로그인 후 toolbar에 추가) */
-  .btn-save{ background:var(--sel); color:#fff; }
-  .btn-save:disabled{ opacity:.4; cursor:default; }
-
   /* 규칙 요약 + 범례 */
   .ribbon{
     display:flex; justify-content:space-between; align-items:center;
@@ -399,7 +395,6 @@
     flex:0 0 auto; width:16px; height:16px; border-radius:50%;
     display:grid; place-items:center; font-size:10.5px; font-weight:800; color:#fff;
   }
-  /* 라벨은 필요 시 줄바꿈(예: 기가·정보 + 제2외국어), 숫자는 바로 옆에 붙도록 */
   .chk .label{ flex:1 1 auto; font-size:12px; line-height:1.25; color:var(--ink); }
   .chk .val{ flex:0 0 auto; font-variant-numeric:tabular-nums; font-weight:800; font-size:12.5px; }
 
@@ -418,7 +413,7 @@
 
   /* ===== 하단/플로팅 액션 ===== */
   .toolbar{
-    position:fixed; right:22px; bottom:80px; z-index:30;  /* 미니바 위에 위치 */
+    position:fixed; right:22px; bottom:80px; z-index:30;
     display:flex; gap:10px;
   }
   .btn{
@@ -427,11 +422,16 @@
     display:inline-flex; align-items:center; gap:8px;
     box-shadow:0 10px 24px -10px rgba(28,43,70,.55);
     transition:transform .08s, opacity .15s;
+    white-space: nowrap; /* 기본적으로 줄바꿈 방지 */
   }
   .btn:active{ transform:translateY(1px); }
   .btn-primary{ background:var(--ink); color:#fff; }
   .btn-ghost{ background:#fff; color:var(--ink); border:1.5px solid var(--line-strong); }
   .btn:disabled{ opacity:.55; cursor:default; }
+
+  /* 데스크톱/모바일 텍스트 분기 */
+  .m-txt { display: none; }
+  .d-txt { display: inline; }
 
   .note{
     margin:10px 0 0; font-size:13px; color:var(--ink-soft);
@@ -445,7 +445,6 @@
   body.capturing .info-sp{ display:none !important; }
   body.capturing .col-head{ position:static !important; }
   body.capturing .spread{ overflow:visible !important; }
-  /* 잉크 절약: 어두운 학기 헤더 → 흰 배경 + 네이비 글씨로 반전 (이 부분만) */
   body.capturing .col-head{
     background:#fff !important; color:var(--ink) !important;
     border-bottom:1.5px solid var(--line-strong); box-shadow:none !important;
@@ -453,10 +452,8 @@
   body.capturing .col-head .gterm{ color:var(--ink) !important; }
   body.capturing .col-head .pick{ color:var(--ink-soft) !important; }
 
-  /* PDF에서는 범례를 숨기고(상단 요약으로 대체) */
   body.capturing .ribbon{ display:none !important; }
 
-  /* PDF 캡처는 모바일이어도 데스크톱(4학기 한 줄) 레이아웃으로 통일 */
   body.capturing .layout{ flex-direction:row !important; gap:0 !important; }
   body.capturing .spread{
     display:flex !important; grid-template-columns:none !important;
@@ -489,7 +486,7 @@
   #printSummary .ps-item.ok{ color:var(--ok); border-color:var(--ok); background:var(--ok-bg); }
   #printSummary .ps-item.bad{ color:var(--alert); border-color:var(--alert); background:var(--alert-bg); }
 
-  /* ===== 하단 고정 미니바 (교과군 필수요건) — 모바일·데스크톱 공통 ===== */
+  /* ===== 하단 고정 미니바 (교과군 필수요건) ===== */
   .statusbar{
     display:flex; position:fixed; left:0; right:0; bottom:0; z-index:40;
     gap:10px; padding:9px 14px 11px; justify-content:center; align-items:center;
@@ -508,10 +505,10 @@
   .sb-chip .v{ font-weight:800; font-size:14px; font-variant-numeric:tabular-nums; }
   .sb-chip .l{ font-weight:600; font-size:10.5px; opacity:.9; }
 
-  /* 하단 고정 미니바에 가리지 않도록 전역 여백 */
+  /* 전역 여백: 미니바 및 툴바 가림 방지 */
   body{ padding-bottom:74px; }
 
-/* ===== 불러오기 모달 리스트 항목 ===== */
+  /* ===== 불러오기 모달 리스트 항목 ===== */
   .rm-item {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
     padding: 11px 14px; border: 1.4px solid var(--line); border-radius: 8px;
@@ -537,53 +534,12 @@
   .rm-del-btn {
     font-family: var(--font-body); font-size: 12.5px; font-weight: 700;
     color: var(--alert); background: transparent; border: 1.5px solid var(--alert); border-radius: 6px;
-    padding: 4px 10px; /* 불러오기 버튼과 동일한 여백 적용 */
-    cursor: pointer; transition: background .12s, color .12s;
+    padding: 4px 10px; cursor: pointer; transition: background .12s, color .12s;
   }
   .rm-del-btn:hover:not(:disabled) { background: var(--alert); color: #fff; }
-  /* 버튼 비활성화 상태 */
   .rm-load-btn:disabled, .rm-del-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  
   .rm-empty { font-size: 13.5px; color: var(--ink-soft); text-align: center; padding: 20px 0; }
 
-
-  /* ===== 반응형 =====
-     960px 이하: 책 펼침면(가로 4단)을 풀고 세로로 적층.
-       · 학기 테이블: 2학기씩(2열) → 680px 이하에서 1학기씩(1열)
-       · 버튼은 흐름 맨 아래에 배치 (미니바는 전 화면 하단 고정) */
-@media (max-width: 960px){
-    .layout{ flex-direction:column; gap:16px; }
-    .spread{
-      order:1; width:100%;
-      display:grid; grid-template-columns:1fr 1fr; gap:14px;
-      background:transparent; border:none; box-shadow:none; overflow:visible;
-    }
-    .spread.scroll{ overflow:visible; }
-    .spine{ display:none; }              /* 책등은 펼침면(가로)일 때만 */
-    
-    .col{
-      min-width:0;
-      border:1px solid var(--line-strong); border-radius:12px; 
-      overflow:visible;                  /* [수정] sticky가 브라우저 창 기준으로 작동할 수 있도록 visible로 변경 */
-      box-shadow:0 12px 30px -24px rgba(28,43,70,.45);
-    }
-    
-    /* [수정] 중간 크기 및 모바일 화면에서도 학기 정보 헤더가 상단에 고정되도록 변경 */
-    .col-head{ 
-      position: sticky; 
-      top: 0; 
-      z-index: 10;                       /* 교과목 버튼들 위로 올라오도록 레이어 순위 상향 */
-      border-top-left-radius: 11px;      /* overflow: visible 상태에서 카드 테두리 밖으로 배경이 깨지지 않게 라운딩 적용 */
-      border-top-right-radius: 11px; 
-      box-shadow: 0 6px 12px -4px rgba(28,43,70,.3); /* 스크롤 되어 내려갈 때 본문과의 경계를 명확하게 표현 */
-    }        
-    
-    .toolbar{                            /* 버튼: 고정 해제 → 페이지 맨 아래 흐름 */
-      position:static; justify-content:center; gap:12px;
-      max-width:1360px; margin:0 auto; padding:4px 22px 36px;
-    }
-    .toolbar .btn{ flex:1 1 0; max-width:240px; justify-content:center; padding:14px 18px; }
-  }
   /* ===== ⓘ 팝오버 ===== */
   .media-pop{
     position:fixed; z-index:60; display:flex; align-items:center; gap:4px;
@@ -632,28 +588,13 @@
   .mm-body.yt iframe{ width:100%; aspect-ratio:16/9; height:auto; max-height:100%; }
   /* 유튜브 모달일 때 항상 4:3 비율 유지 및 중앙 배치 */
   .mm-panel:has(.yt) {
-    width: min(960px, 94vw); /* 데스크톱에선 960px까지, 모바일에선 94vw */
-    height: auto;            /* 높이 자동 조절 */
+    width: min(960px, 94vw);
+    height: auto;
     border-radius: 14px;
   }
   .mm-panel:has(.yt) .mm-body.yt {
-    aspect-ratio: 4 / 3;     /* 항상 4:3 비율 */
+    aspect-ratio: 4 / 3;
     flex: none;
-  }
-
-@media (max-width: 680px){
-    .masthead { flex-wrap: wrap; gap: 8px; }
-    .masthead > div:first-child { flex: 1 1 100%; min-width: 0; }
-    .masthead .ident{ flex:1 1 100%; }
-    .login-form-wrap{ flex-wrap:wrap; gap:6px; }
-    
-    /* (아래는 기존 코드 그대로 유지) */
-    .spread{ grid-template-columns:1fr; }
-    .mm-panel{ width:100vw; height:100vh; border-radius:0; }
-    
-    .toolbar .btn {
-      font-size: 12px; padding: 10px 8px; gap: 4px;
-    }
   }
 
   /* ===== 관리자 패널 ===== */
@@ -749,7 +690,82 @@
   .dupe-opt:hover{ opacity:.88; }
   .dupe-opt.secondary{ background:var(--paper-2); color:var(--ink); border:1.5px solid var(--line-strong); }
   .dupe-opt.cancel{ background:transparent; color:var(--ink-soft); font-weight:600; }
+
+
+  /* ===== 반응형 ===== */
+  @media (max-width: 960px){
+    body { padding-bottom: 140px; } /* 플로팅 툴바 가림 방지 */
+    
+    .layout{ flex-direction:column; gap:16px; }
+    .spread{
+      order:1; width:100%;
+      display:grid; grid-template-columns:1fr 1fr; gap:14px;
+      background:transparent; border:none; box-shadow:none; overflow:visible;
+    }
+    .spread.scroll{ overflow:visible; }
+    .spine{ display:none; }
+    
+    .col{
+      min-width:0;
+      border:1px solid var(--line-strong); border-radius:12px; 
+      overflow:visible;
+      box-shadow:0 12px 30px -24px rgba(28,43,70,.45);
+    }
+    
+    .col-head{ 
+      position: sticky; top: 0; z-index: 10;
+      border-top-left-radius: 11px; border-top-right-radius: 11px; 
+      box-shadow: 0 6px 12px -4px rgba(28,43,70,.3);
+    }        
+    
+    /* 화면 하단 고정 투명 플로팅 바 (배경 제거) */
+    .toolbar {
+      position: fixed; left: 0; right: 0; bottom: 74px; /* 상태바 바로 위로 띄움 */
+      max-width: none; margin: 0;
+      justify-content: center; gap: 12px;
+      padding: 0 22px; z-index: 35;
+      
+      /* 하얀색 배경 및 테두리 효과 모두 제거 */
+      background: transparent;
+      backdrop-filter: none; -webkit-backdrop-filter: none;
+      border-top: none;
+      box-shadow: none;
+      
+      /* 버튼 사이 빈 공간을 터치하면 뒤에 있는 과목이 눌리도록 투과 설정 */
+      pointer-events: none; 
+    }
+    
+    .toolbar .btn { 
+      flex: 1 1 0; max-width: 240px; justify-content: center; padding: 14px 18px; 
+      pointer-events: auto; /* 버튼 자체는 클릭 가능하게 복구 */
+    }
+  }
+
+  @media (max-width: 680px){
+    .masthead { flex-wrap: wrap; gap: 8px; }
+    .masthead > div:first-child { flex: 1 1 100%; min-width: 0; }
+    .masthead .ident{ flex:1 1 100%; }
+    .login-form-wrap{ flex-wrap:wrap; gap:6px; }
+    
+    .spread{ grid-template-columns:1fr; }
+    .mm-panel{ width:100vw; height:100vh; border-radius:0; }
+    
+    /* 모바일 버튼 텍스트 줄바꿈 분리 */
+    .d-txt { display: none; }
+    .m-txt { display: inline-block; line-height: 1.15; }
+    
+    /* 모바일 툴바 여백 최적화 */
+    .toolbar { gap: 6px; padding: 0 8px; bottom: 70px; }
+    .toolbar .btn {
+      font-size: 14px;
+      padding: 10px 4px;
+      white-space: normal;
+      text-align: center;
+      justify-content: center;
+    }
+  }
 </style>
+
 </head>
 <body>
 <div class="wrap">
@@ -924,10 +940,22 @@
 </div>
 
 <div class="toolbar no-print">
-  <button class="btn btn-ghost" id="resetBtn" type="button">선택 초기화</button>
-  <button class="btn btn-ghost" id="loadBtn" type="button" style="display:none">불러오기</button>
-  <button class="btn btn-save" id="saveBtn" type="button" style="display:none">임시저장</button>
-  <button class="btn btn-primary" id="submitBtn" type="button" style="display:none">제출하기</button>
+  <button class="btn btn-ghost" id="resetBtn" type="button">
+    <span class="d-txt">초기화</span>
+    <span class="m-txt" style="letter-spacing:-0.05em;">초기화</span>
+  </button>
+  <button class="btn btn-ghost" id="loadBtn" type="button" style="display:none">
+    <span class="d-txt">불러오기</span>
+    <span class="m-txt">불러<br>오기</span>
+  </button>
+  <button class="btn btn-save" id="saveBtn" type="button" style="display:none">
+    <span class="d-txt">임시저장</span>
+    <span class="m-txt">임시<br>저장</span>
+  </button>
+  <button class="btn btn-primary" id="submitBtn" type="button" style="display:none">
+    <span class="d-txt">제출하기</span>
+    <span class="m-txt">제출<br>하기</span>
+  </button>
 </div>
 
 <!-- 화면 하단 고정 미니바: 교과군 필수요건만 표시 (모바일/데스크톱 공통) -->
