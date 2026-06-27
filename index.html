@@ -934,7 +934,7 @@
     <header class="masthead">
       <div>
         <div class="eyebrow">
-          <span>경기여자고등학교 · 나의 진로설계와 수강신청 &nbsp;<span class="date" id="today"></span></span>
+          <span>경기여자고등학교 · 나의 진로설계와 수강신청 </span>
         </div>
         <h1><span class="yr">2026</span> 수강신청 로드맵</h1>
       </div>
@@ -1877,7 +1877,7 @@ function applyAuthState(){
   if(loggedIn && authUser){
     const who = isAdmin ? "관리자" : `${authUser.sid} ${authUser.name}`;
     document.getElementById("userGreeting").innerHTML =
-      `<b>${who}</b>&nbsp;<span class="greeting"> 접속 중</span>`;
+      `<b>${who}</b>&nbsp;<span class="greeting"> 접속 중  &nbsp;<span class="date" id="today"></span></span>`;
   }
   if(isAdmin) initAdminPanel();
 }
