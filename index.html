@@ -2297,17 +2297,38 @@ async function loadOverview(){
 
 // CSV 다운로드 (인증 헤더 필요 → blob 처리)
 async function downloadCsv(sem){
+  const btn = document.getElementById("ovCsvSem");
+  
   try{
+    // 버튼 비활성화 + 로딩 텍스트
+    btn.disabled = true;
+    btn.textContent = "CSV 생성중";
+    
     const url = `${API}/admin/matrix?download=1` + (sem ? `&semester=${sem}` : "");
     const res = await fetch(url, { headers:{ "Authorization":"Bearer " + authToken } });
-    if(!res.ok){ alert("다운로드 실패"); return; }
+    
+    if(!res.ok){ 
+      alert("다운로드 실패"); 
+      btn.disabled = false;
+      btn.textContent = "CSV 다운로드";
+      return; 
+    }
+    
     const blob = await res.blob();
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = `수강신청_제출현황_${sem || "전체"}.csv`;
     document.body.appendChild(a); a.click(); a.remove();
     URL.revokeObjectURL(a.href);
-  } catch{ alert("서버 연결 오류"); }
+    
+    // 다운로드 완료 → 버튼 복귀
+    btn.disabled = false;
+    btn.textContent = "CSV 다운로드";
+  } catch{ 
+    alert("서버 연결 오류"); 
+    btn.disabled = false;
+    btn.textContent = "CSV 다운로드";
+  }
 }
 
 // 학급별 현황
