@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>과목 안내 PDF</title>
 
 <!-- 공식 pdf.js 뷰어 컴포넌트 (v3.11.174, UMD - GitHub Pages MIME 안전) -->
@@ -27,9 +27,12 @@
   #scale{ font-size:12px; min-width:48px; text-align:center; color:#cdd6e6; }
 
   /* 뷰어 영역 */
+/* 뷰어 영역 수정 */
   #viewerContainer{
     position:absolute; top:42px; left:0; right:0; bottom:0;
     overflow:auto; background:#33373d;
+    /* [추가] 핀치줌/브라우저 기본 제스처 방지 */
+    touch-action: pan-y; 
   }
   #viewer{ }
   .pdfViewer .page{ margin:10px auto; border:none; box-shadow:0 6px 18px -8px rgba(0,0,0,.6); }
@@ -110,6 +113,29 @@
       console.error(err);
       showMsg("PDF를 불러오지 못했습니다. <a href='"+FILE+"#page="+PAGE+"' target='_blank' rel='noopener'>PDF를 새 탭에서 여세요</a>.");
     });
+
+    // [추가] 핀치 줌 방지 로직: 브라우저 전체 확대를 막고 내부 이벤트만 허용
+    document.addEventListener('gesturestart', function (e) {
+      e.preventDefault();
+    }, { passive: false });
+
+    // 핀치 줌 시 이벤트 전파 차단
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function (event) {
+      const now = (new Date()).getTime();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, false);
+
+    // 핀치 줌 시 기본 동작 무력화
+    document.addEventListener('touchmove', function (event) {
+      if (event.scale !== 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
   })();
   </script>
 </body>
