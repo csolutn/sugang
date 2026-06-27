@@ -471,22 +471,37 @@
   /* 하단 고정 미니바에 가리지 않도록 전역 여백 */
   body{ padding-bottom:74px; }
 
-  /* ===== 불러오기 모달 리스트 항목 ===== */
+/* ===== 불러오기 모달 리스트 항목 ===== */
   .rm-item {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
     padding: 11px 14px; border: 1.4px solid var(--line); border-radius: 8px;
     background: #fff; transition: border-color .12s, background .12s;
   }
   .rm-item:hover { border-color: var(--sel); background: var(--sel-bg); }
-  .rm-info { flex: 1 1 auto; min-width: 0; cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
+  .rm-info { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
   .rm-name { font-size: 14px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .rm-del-btn {
-    flex: 0 0 auto; font-family: var(--font-body); font-size: 12.5px; font-weight: 700;
-    color: var(--alert); background: transparent; border: none; border-radius: 6px;
-    padding: 5px 9px; cursor: pointer; transition: background .12s;
+  
+  .rm-actions { flex: 0 0 auto; display: flex; gap: 6px; }
+  
+  .rm-load-btn {
+    font-family: var(--font-body); font-size: 12.5px; font-weight: 700;
+    color: var(--sel); background: transparent; border: 1.5px solid var(--sel); border-radius: 6px;
+    padding: 4px 10px; cursor: pointer; transition: background .12s, color .12s;
   }
-  .rm-del-btn:hover { background: var(--alert-bg); }
+  .rm-load-btn:hover:not(:disabled) { background: var(--sel); color: #fff; }
+  
+  .rm-del-btn {
+    font-family: var(--font-body); font-size: 12.5px; font-weight: 700;
+    color: var(--alert); background: transparent; border: 1.5px solid transparent; border-radius: 6px;
+    padding: 4px 9px; cursor: pointer; transition: background .12s;
+  }
+  .rm-del-btn:hover:not(:disabled) { background: var(--alert-bg); }
+  
+  /* 버튼 비활성화 상태 */
+  .rm-load-btn:disabled, .rm-del-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  
   .rm-empty { font-size: 13.5px; color: var(--ink-soft); text-align: center; padding: 20px 0; }
+
 
   /* ===== 반응형 =====
      960px 이하: 책 펼침면(가로 4단)을 풀고 세로로 적층.
@@ -1277,7 +1292,7 @@ function applyAuthState(){
 async function doLogin(sid, name, pw, errEl, btnEl){
   if(!sid || !name){ errEl.textContent = "학번과 이름을 입력하세요."; return; }
   const orig = btnEl.textContent;
-  btnEl.disabled = true; btnEl.textContent = "…";
+  btnEl.disabled = true; btnEl.textContent = "로그인 중";
   errEl.textContent = "";
   try{
     const res = await fetch(API + "/auth/login", {
@@ -1438,24 +1453,35 @@ async function fetchAndRenderRoadmaps() {
       const item = document.createElement("div");
       item.className = "rm-item";
 
-      // 로드맵 정보 클릭 시 불러오기 동작 실행
       const info = document.createElement("div");
       info.className = "rm-info";
       info.innerHTML = `<div class="rm-name">${rd.name}</div>`;
-      info.addEventListener("click", () => loadRoadmapData(rd._id, rd.name));
 
-      // 데이터 제거 전용 버튼
+      // 버튼들을 묶어줄 컨테이너
+      const actions = document.createElement("div");
+      actions.className = "rm-actions";
+
+      // 불러오기 버튼 생성
+      const loadBtn = document.createElement("button");
+      loadBtn.type = "button";
+      loadBtn.className = "rm-load-btn";
+      loadBtn.textContent = "불러오기";
+
+      // 삭제 버튼 생성
       const delBtn = document.createElement("button");
       delBtn.type = "button";
       delBtn.className = "rm-del-btn";
       delBtn.textContent = "삭제";
-      delBtn.addEventListener("click", (e) => {
-        e.stopPropagation(); // 불러오기 핸들러 트리거 차단
-        deleteRoadmapData(rd._id, rd.name);
-      });
+
+      // 이벤트 연결 시 버튼 자신과 상대방 버튼의 요소를 같이 넘겨줌
+      loadBtn.addEventListener("click", () => loadRoadmapData(rd._id, rd.name, loadBtn, delBtn));
+      delBtn.addEventListener("click", () => deleteRoadmapData(rd._id, rd.name, loadBtn, delBtn));
+
+      actions.appendChild(loadBtn);
+      actions.appendChild(delBtn);
 
       item.appendChild(info);
-      item.appendChild(delBtn);
+      item.appendChild(actions);
       listContainer.appendChild(item);
     });
   } catch {
@@ -1464,7 +1490,13 @@ async function fetchAndRenderRoadmaps() {
 }
 
 // 선택한 파일 데이터 화면 로드
-async function loadRoadmapData(id, name) {
+async function loadRoadmapData(id, name, loadBtn, delBtn) {
+  // 상태 변경 (로딩 중 표시 및 버튼 비활성화)
+  const origText = loadBtn.textContent;
+  loadBtn.textContent = "불러오는 중";
+  loadBtn.disabled = true;
+  delBtn.disabled = true;
+
   try {
     const res = await fetch(API + "/roadmaps/" + id, {
       headers: { "Authorization": "Bearer " + authToken }
@@ -1484,12 +1516,22 @@ async function loadRoadmapData(id, name) {
     closeLoadModal();
   } catch {
     alert("서버 연결 오류");
+  } finally {
+    // 혹시 모달이 안 닫히고 에러가 났을 경우를 대비해 원래 상태 복구
+    loadBtn.textContent = origText;
+    loadBtn.disabled = false;
+    delBtn.disabled = false;
   }
 }
 
 // 선택한 파일 서버에서 제거
-async function deleteRoadmapData(id, name) {
+async function deleteRoadmapData(id, name, loadBtn, delBtn) {
   if (!confirm(`"${name}" 로드맵을 완전히 삭제하시겠습니까?`)) return;
+  
+  // 상태 변경 (버튼 비활성화)
+  delBtn.disabled = true;
+  loadBtn.disabled = true;
+
   try {
     const res = await fetch(API + "/roadmaps/" + id, {
       method: "DELETE",
@@ -1499,12 +1541,15 @@ async function deleteRoadmapData(id, name) {
     if (!res.ok) { alert(data.error || "삭제 실패"); return; }
     
     alert(`"${name}" 삭제 완료!`);
-    fetchAndRenderRoadmaps(); // 목록 갱신
+    fetchAndRenderRoadmaps(); // 삭제 성공 시 목록 다시 그리기
   } catch {
     alert("서버 연결 오류");
+  } finally {
+    // 삭제 취소나 에러 시 원상 복구
+    delBtn.disabled = false;
+    loadBtn.disabled = false;
   }
 }
-
 // 불러오기 실행 단추 트리거
 document.getElementById("loadBtn").addEventListener("click", () => {
   showLoadModal();
