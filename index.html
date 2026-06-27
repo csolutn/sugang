@@ -67,6 +67,17 @@
     font-size:12.5px; letter-spacing:.14em; color:var(--ink-soft);
     font-weight:600; text-transform:none; margin-bottom:6px;
   }
+  /* PDF 미니 버튼 */
+  .pdf-mini{
+    display:inline-flex; align-items:center; gap:4px;
+    font-family:var(--font-body); font-size:12px; font-weight:700; letter-spacing:0;
+    color:var(--ink); background:#fff;
+    border:1.4px solid var(--line-strong); border-radius:7px;
+    padding:3px 9px; cursor:pointer; white-space:nowrap;
+    transition:background .12s, border-color .12s;
+  }
+  .pdf-mini:hover{ background:var(--paper-2); border-color:var(--ink-soft); }
+  .pdf-mini svg{ display:block; }
   .masthead h1{
     font-family:var(--font-disp); font-weight:800;
     font-size:clamp(26px,3.4vw,40px); margin:0; letter-spacing:-.01em;
@@ -107,22 +118,8 @@
   .user-info .greeting{ font-size:13px; color:var(--ink-soft); font-weight:500; }
   .user-info.on{ display:flex; }
 
-/* ===== 로그인 폼 및 모바일 버튼 ===== */
+  /* 로그인 폼: 항상 표시 (모바일·데스크톱 공통) */
   .login-form-wrap{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-  
-  .login-mobile-btn{
-    display:none; /* 데스크톱 기본 숨김 */
-    font-family:var(--font-body); font-size:13px; font-weight:700;
-    border:1.5px solid var(--ink); border-radius:7px;
-    background:var(--ink); color:#fff;
-    padding:6px 14px; cursor:pointer;
-  }
-
-  @media (max-width: 680px){
-    .login-form-wrap{ display:none; }
-    /* !important를 제거해야 자바스크립트의 숨김(display:none) 명령이 정상 작동합니다 */
-    .login-mobile-btn{ display:inline-flex; }
-  }
 
   /* 로그인 모달 (모바일) */
   .login-modal{ position:fixed; inset:0; z-index:80; display:none; place-items:center; }
@@ -161,7 +158,7 @@
 
   /* 규칙 요약 + 범례 */
   .ribbon{
-    display:flex; justify-content:flex-end; align-items:center;
+    display:flex; justify-content:space-between; align-items:center;
     flex-wrap:wrap; margin:4px 0 4px; padding:0;
     background:transparent; border:none; border-radius:0;
   }
@@ -329,6 +326,44 @@
   }
   .course[aria-pressed="true"] .box{ background:var(--sel); border-color:var(--sel); }
 
+  /* 제외(✕) 버튼 */
+  .excl-btn{
+    flex:0 0 auto; align-self:center;
+    width:18px; height:18px; padding:0; cursor:pointer;
+    border:none; border-radius:5px;
+    background:transparent; color:var(--ink-soft);
+    font-size:11px; line-height:1; display:grid; place-items:center;
+    opacity:.45; transition:opacity .12s, background .12s, color .12s;
+  }
+  .excl-btn:hover{ opacity:1; background:var(--alert-bg); color:var(--alert); }
+  .course-row.is-excluded{ display:none; }   /* 제외된 과목은 리스트에서 완전히 숨김 */
+
+  /* 하단 "제외한 과목" 박스 */
+  .excluded-box{
+    margin:18px 0 4px; padding:12px 16px;
+    background:var(--paper-2); border:1px solid var(--line); border-radius:10px;
+  }
+  .excluded-box[hidden]{ display:none; }
+  .excluded-box .eb-title{
+    font-size:13px; font-weight:800; color:var(--ink); margin-bottom:8px;
+    letter-spacing:.02em;
+  }
+  .eb-rows{ display:flex; flex-direction:column; gap:7px; }
+  .eb-row{ display:flex; align-items:flex-start; gap:10px; flex-wrap:wrap; }
+  .eb-sem{ flex:0 0 88px; font-size:12.5px; font-weight:800; color:var(--ink); padding-top:3px; }
+  .eb-chips{ display:flex; gap:6px; flex-wrap:wrap; flex:1 1 auto; }
+  .eb-chip{
+    display:inline-flex; align-items:center; gap:6px;
+    background:#fff; border:1px solid var(--line-strong); border-radius:999px;
+    padding:2px 5px 2px 11px; font-size:12px; color:var(--ink);
+  }
+  .eb-restore{
+    border:none; border-radius:999px; cursor:pointer;
+    background:var(--sel); color:#fff; font-size:11px; font-weight:700;
+    padding:2px 9px; transition:opacity .12s;
+  }
+  .eb-restore:hover{ opacity:.85; }
+
   /* ===== 충족여부 패널 (붉은색 섹션) ===== */
   .panel{
     flex:0 0 234px; align-self:flex-start;
@@ -483,6 +518,10 @@
   .rm-item:hover { border-color: var(--sel); background: var(--sel-bg); }
   .rm-info { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
   .rm-name { font-size: 14px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rm-meta{ display:flex; }
+  .rm-badge{ font-size:11px; font-weight:700; padding:1px 8px; border-radius:999px; }
+  .rm-badge.ok{ background:var(--ok-bg); color:var(--ok); }
+  .rm-badge.bad{ background:var(--alert-bg); color:var(--alert); }
   
   .rm-actions { flex: 0 0 auto; display: flex; gap: 6px; }
   
@@ -601,14 +640,10 @@
   }
 
 @media (max-width: 680px){
-    /* ⬅️ [추가/수정] 모바일에서 버튼이 다음 줄로 뚝 떨어지지 않고 타이틀 우측 하단에 붙도록 고정 */
-    .masthead { flex-wrap: nowrap; gap: 12px; }
-    
-    /* 단, 로그인 후에 정보가 길어지면 원래대로 줄바꿈 허용 */
-    .masthead:has(.user-info.on) { flex-wrap: wrap; }
-    
-    /* 타이틀 영역이 공간을 유연하게 차지하며 알아서 글씨 줄바꿈되도록 설정 */
-    .masthead > div:first-child { flex: 1 1 auto; min-width: 0; }
+    .masthead { flex-wrap: wrap; gap: 8px; }
+    .masthead > div:first-child { flex: 1 1 100%; min-width: 0; }
+    .masthead .ident{ flex:1 1 100%; }
+    .login-form-wrap{ flex-wrap:wrap; gap:6px; }
     
     /* (아래는 기존 코드 그대로 유지) */
     .spread{ grid-template-columns:1fr; }
@@ -618,6 +653,90 @@
       font-size: 12px; padding: 10px 8px; gap: 4px;
     }
   }
+
+  /* ===== 관리자 패널 ===== */
+  .admin-panel{ display:none; margin-top:8px; }
+  body.admin-mode .layout,
+  body.admin-mode .ribbon,
+  body.admin-mode .note,
+  body.admin-mode .toolbar,
+  body.admin-mode #statusbar,
+  body.admin-mode #excludedBox,
+  body.admin-mode #printSummary,
+  body.admin-mode #pdfMiniBtn{ display:none !important; }
+  body.admin-mode .admin-panel{ display:block; }
+  body.admin-mode{ padding-bottom:24px; }
+
+  .admin-tabs{ display:flex; gap:6px; border-bottom:2px solid var(--line-strong); margin-bottom:16px; }
+  .atab{
+    font-family:var(--font-body); font-size:14px; font-weight:700; cursor:pointer;
+    background:transparent; border:none; color:var(--ink-soft);
+    padding:9px 16px; border-bottom:3px solid transparent; margin-bottom:-2px;
+  }
+  .atab.on{ color:var(--ink); border-bottom-color:var(--ink); }
+  .atab-panel[hidden]{ display:none; }
+
+  .ap-controls{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+  .ap-controls label{ font-size:13px; font-weight:700; color:var(--ink); }
+  .ap-controls select{
+    font-family:var(--font-body); font-size:14px; color:var(--ink);
+    border:1.4px solid var(--line-strong); border-radius:7px; padding:6px 10px; background:#fff; cursor:pointer;
+  }
+  .ap-spacer{ flex:1 1 auto; }
+  .ap-fixed{ font-size:14px; font-weight:800; color:var(--ink); }
+  .btn-mini{
+    font-family:var(--font-body); font-size:13px; font-weight:700; cursor:pointer;
+    border:1.4px solid var(--line-strong); border-radius:7px; background:#fff; color:var(--ink);
+    padding:7px 13px; transition:background .12s;
+  }
+  .btn-mini:hover{ background:var(--paper-2); }
+  .btn-mini.primary{ background:var(--ink); color:#fff; border-color:var(--ink); }
+
+  .ov-stats{ display:flex; gap:12px; flex-wrap:wrap; margin-bottom:18px; }
+  .ov-card{
+    flex:1 1 120px; background:#fff; border:1.5px solid var(--line); border-radius:10px;
+    padding:12px 16px; text-align:center;
+  }
+  .ov-card .n{ font-size:26px; font-weight:800; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .ov-card .t{ font-size:12px; color:var(--ink-soft); font-weight:600; margin-top:2px; }
+  .ov-card.sub .n{ color:var(--ok); }
+  .ov-card.no .n{ color:var(--alert); }
+
+  .ov-courses{ display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:7px; }
+  .ovc-item{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    background:#fff; border:1px solid var(--line); border-radius:8px; padding:7px 12px;
+  }
+  .ovc-item .nm{ font-size:13px; color:var(--ink); }
+  .ovc-item .cnt{ font-size:14px; font-weight:800; color:var(--sel); font-variant-numeric:tabular-nums; }
+  .ovc-item.zero .cnt{ color:var(--line-strong); }
+
+  .ap-legend{ display:flex; align-items:center; gap:4px; font-size:12px; color:var(--ink-soft); margin-left:auto; flex-wrap:wrap; }
+  .cs-dot{ width:11px; height:11px; border-radius:50%; display:inline-block; margin-left:6px; }
+  .cs-dot.complete{ background:var(--ok); }
+  .cs-dot.draft{ background:var(--warn); }
+  .cs-dot.none{ background:#c9cdd5; }
+  .cls-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px; }
+  .cs-item{
+    display:flex; align-items:center; gap:9px;
+    background:#fff; border:1.5px solid var(--line); border-radius:9px; padding:9px 12px;
+    text-align:left; font-family:var(--font-body);
+  }
+  .cs-item.clickable{ cursor:pointer; transition:border-color .12s, background .12s; }
+  .cs-item.clickable:hover{ border-color:var(--sel); background:var(--sel-bg); }
+  .cs-item .dot{ flex:0 0 auto; width:12px; height:12px; border-radius:50%; }
+  .cs-item.complete .dot{ background:var(--ok); }
+  .cs-item.draft .dot{ background:var(--warn); }
+  .cs-item.none .dot{ background:#c9cdd5; }
+  .cs-item .who{ flex:1 1 auto; min-width:0; }
+  .cs-item .who .sid{ font-size:11px; color:var(--ink-soft); font-variant-numeric:tabular-nums; }
+  .cs-item .who .nm{ font-size:13.5px; font-weight:700; color:var(--ink); }
+
+  .stu-sem{ margin-bottom:14px; }
+  .stu-sem h4{ margin:0 0 6px; font-size:14px; color:var(--ink); border-bottom:1px solid var(--line); padding-bottom:4px; }
+  .stu-sem .courses{ display:flex; flex-wrap:wrap; gap:6px; }
+  .stu-sem .c{ font-size:12.5px; background:var(--sel-bg); color:var(--sel); border-radius:6px; padding:3px 9px; font-weight:600; }
+  .stu-meta{ font-size:12.5px; color:var(--ink-soft); margin-bottom:12px; }
 </style>
 </head>
 <body>
@@ -628,7 +747,9 @@
 
     <header class="masthead">
       <div>
-        <div class="eyebrow">경기여자고등학교 · 나의 진로설계와 수강신청 &nbsp;<span class="date" id="today"></span></div>
+        <div class="eyebrow">
+          <span>경기여자고등학교 · 나의 진로설계와 수강신청 &nbsp;<span class="date" id="today"></span></span>
+        </div>
         <h1><span class="yr">2026</span>학년도 입학생 수강신청 로드맵</h1>
       </div>
       <div class="ident">
@@ -637,7 +758,7 @@
           <span id="userGreeting"></span>
           <button class="login-btn ghost" id="logoutBtn" type="button">로그아웃</button>
         </div>
-        <!-- 데스크톱 로그인 폼 -->
+        <!-- 로그인 폼 (데스크톱·모바일 공통) -->
         <div class="login-form-wrap" id="loginFormWrap">
           <label for="loginSid">학번</label>
           <input id="loginSid" type="text" placeholder="10101" autocomplete="off" maxlength="10" />
@@ -650,11 +771,10 @@
           <button class="login-btn" id="loginBtn" type="button">로그인</button>
           <span class="login-err" id="loginErr"></span>
         </div>
-        <!-- 모바일 로그인 버튼 -->
-        <button class="login-mobile-btn no-print" id="loginMobileBtn" type="button">로그인</button>
       </div>
     </header>
 
+    <!-- PDF 저장 버튼: 전체 너비 오른쪽 정렬 -->
     <!-- 모바일 로그인 모달 -->
     <div class="login-modal no-print" id="loginModal">
       <div class="lm-back" id="loginModalBack"></div>
@@ -701,6 +821,10 @@
         <span><i class="mk yunghap">▲</i>융합</span>
         <span><i class="mk sayung">▲</i>사회과학 융합</span>
       </div>
+      <button class="pdf-mini no-print" id="pdfMiniBtn" type="button" title="PDF로 저장">
+        <svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path fill="currentColor" d="M5 3h11l3 3v15a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm2 2v5h8V5H7zm5 0v4h2V5h-2zM7 14h10v5H7v-5z"/></svg>
+        PDF로 저장
+      </button>
     </div>
 
     <!-- PDF 저장 시에만 표시 (상단, 범례 자리). 웹 화면에서는 숨김 -->
@@ -718,13 +842,74 @@
   </div>
   <!-- 캡처 대상 끝 -->
 
+  <!-- 제외한 과목 박스 -->
+  <div class="excluded-box no-print" id="excludedBox" hidden>
+    <div class="eb-title">제외한 과목</div>
+    <div class="eb-rows" id="ebRows"></div>
+  </div>
+
+  <!-- ===== 관리자 패널 (admin 로그인 시 표시) ===== -->
+  <div id="adminPanel" class="admin-panel no-print">
+    <div class="admin-tabs">
+      <button class="atab on" data-tab="overview" type="button">전체 현황</button>
+      <button class="atab" data-tab="class" type="button">학급별 현황</button>
+    </div>
+
+    <!-- 전체 현황 -->
+    <section class="atab-panel" id="apOverview">
+      <div class="ap-controls">
+        <label>학기</label>
+        <select id="ovSem">
+          <option value="s21">2학년 1학기</option>
+          <option value="s22">2학년 2학기</option>
+          <option value="s31">3학년 1학기</option>
+          <option value="s32">3학년 2학기</option>
+        </select>
+        <span class="ap-spacer"></span>
+        <button class="btn-mini" id="ovCsvSem" type="button">이 학기 CSV</button>
+        <button class="btn-mini primary" id="ovCsvAll" type="button">전체 학기 CSV</button>
+      </div>
+      <div class="ov-stats" id="ovStats"></div>
+      <div class="ov-courses" id="ovCourses"></div>
+    </section>
+
+    <!-- 학급별 현황 -->
+    <section class="atab-panel" id="apClass" hidden>
+      <div class="ap-controls">
+        <span class="ap-fixed">1학년</span>
+        <label>반</label>
+        <select id="clsSel"></select>
+        <span class="ap-legend">
+          <i class="cs-dot complete"></i>조건충족
+          <i class="cs-dot draft"></i>임시저장(미충족)
+          <i class="cs-dot none"></i>미제출
+        </span>
+      </div>
+      <div class="cls-grid" id="clsGrid"></div>
+    </section>
+  </div>
+
+  <!-- 학생 제출내역 상세 모달 -->
+  <div id="stuModal" class="media-modal no-print" hidden>
+    <div class="mm-backdrop" id="stuModalBack"></div>
+    <div class="mm-panel" style="height:auto; max-height:88vh;">
+      <div class="mm-head">
+        <span class="mm-title" id="stuModalTitle"></span>
+        <div class="mm-actions">
+          <button class="mm-x" id="stuModalClose" type="button" aria-label="닫기">✕</button>
+        </div>
+      </div>
+      <div class="mm-body" id="stuModalBody" style="background:#fff; overflow:auto; padding:16px;"></div>
+    </div>
+  </div>
+
 </div>
 
 <div class="toolbar no-print">
   <button class="btn btn-ghost" id="resetBtn" type="button">선택 초기화</button>
   <button class="btn btn-ghost" id="loadBtn" type="button" style="display:none">불러오기</button>
   <button class="btn btn-save" id="saveBtn" type="button" style="display:none">임시저장</button>
-  <button class="btn btn-primary" id="pdfBtn" type="button">PDF로 저장</button>
+  <button class="btn btn-primary" id="submitBtn" type="button" style="display:none">제출하기</button>
 </div>
 
 <!-- 화면 하단 고정 미니바: 교과군 필수요건만 표시 (모바일/데스크톱 공통) -->
@@ -931,7 +1116,80 @@ const SEMESTERS = [
    2) 상태 + 펼침면 렌더링
    ========================================================= */
 const selected = new Set();         // key: `${semId}::${courseName}`
+const excluded = new Set();         // 제외한 과목: `${semId}::${courseName}`
 const key = (sem, name) => sem + "::" + name;
+
+/* ----- 과목 제외 / 복원 ----- */
+function excludeCourse(semId, name){
+  const k = key(semId, name);
+  excluded.add(k);
+  // 선택돼 있었다면 해제
+  if(selected.has(k)){
+    selected.delete(k);
+    const b = document.querySelector(`.course[data-sem="${semId}"][data-name="${CSS.escape(name)}"]`);
+    if(b) b.setAttribute("aria-pressed","false");
+  }
+  applyExcluded();
+  recompute();
+}
+function restoreCourse(semId, name){
+  excluded.delete(key(semId, name));
+  applyExcluded();
+  recompute();
+}
+// 행 숨김/표시 + 하단 박스 다시 그리기
+function applyExcluded(){
+  document.querySelectorAll(".course-row").forEach(row => {
+    row.classList.toggle("is-excluded", excluded.has(row.dataset.key));
+  });
+  renderExcludedBox();
+}
+// 하단 "제외한 과목" 박스 렌더
+function renderExcludedBox(){
+  const box = document.getElementById("excludedBox");
+  const rows = document.getElementById("ebRows");
+  if(!box || !rows) return;
+  rows.innerHTML = "";
+  let any = false;
+  SEMESTERS.forEach(sem => {
+    const names = [];
+    excluded.forEach(k => {
+      const i = k.indexOf("::");
+      if(k.slice(0, i) === sem.id) names.push(k.slice(i + 2));
+    });
+    if(!names.length) return;
+    any = true;
+    const r = document.createElement("div");
+    r.className = "eb-row";
+    r.innerHTML = `<span class="eb-sem">${sem.title}</span>`;
+    const chips = document.createElement("div");
+    chips.className = "eb-chips";
+    names.forEach(nm => {
+      const chip = document.createElement("span");
+      chip.className = "eb-chip";
+      chip.innerHTML = `<span class="eb-nm">${nm}</span>`;
+      const rb = document.createElement("button");
+      rb.type = "button"; rb.className = "eb-restore"; rb.textContent = "복원";
+      rb.addEventListener("click", () => restoreCourse(sem.id, nm));
+      chip.appendChild(rb);
+      chips.appendChild(chip);
+    });
+    r.appendChild(chips);
+    rows.appendChild(r);
+  });
+  box.hidden = !any;
+}
+// 저장/제출용 제외 목록 수집
+function collectExcluded(){
+  const obj = {};
+  SEMESTERS.forEach(s => obj[s.id] = []);
+  excluded.forEach(k => {
+    const i = k.indexOf("::");
+    const sid = k.slice(0, i);
+    if(obj[sid]) obj[sid].push(k.slice(i + 2));
+  });
+  return obj;
+}
 
 function buildSpread(){
   const spread = document.getElementById("spread");
@@ -969,6 +1227,7 @@ function buildSpread(){
         const ty = TYPE[t];
         const row = document.createElement("div");
         row.className = "course-row";
+        row.dataset.key = sem.id + "::" + name;
 
         // 자료(PDF/유튜브)가 있는 과목에만 ⓘ, 없으면 정렬용 빈칸
         const media = MEDIA[name];
@@ -999,6 +1258,16 @@ function buildSpread(){
            <span class="box">✓</span>`;
         btn.addEventListener("click", () => toggle(btn, sem.id, name));
         row.appendChild(btn);
+
+        // 제외(✕) 버튼 — 안 들을 과목을 리스트에서 빼기
+        const xBtn = document.createElement("button");
+        xBtn.type = "button";
+        xBtn.className = "excl-btn no-print";
+        xBtn.title = "이 과목 제외";
+        xBtn.setAttribute("aria-label", name + " 제외");
+        xBtn.innerHTML = "✕";
+        xBtn.addEventListener("click", (e) => { e.stopPropagation(); excludeCourse(sem.id, name); });
+        row.appendChild(xBtn);
 
         grp.appendChild(row);
       });
@@ -1127,8 +1396,8 @@ async function exportPDF(){
     return;
   }
 
-  const btn = document.getElementById("pdfBtn");
-  const orig = btn.textContent;
+  const btn = document.getElementById("pdfMiniBtn");
+  const orig = btn.innerHTML;
   btn.disabled = true; btn.textContent = "PDF 만드는 중…";
 
   // 2. 로그인 여부에 따른 학번/이름 데이터 추출 분기 처리 (에러 방지)
@@ -1204,7 +1473,7 @@ async function exportPDF(){
   } finally{
     document.body.classList.remove("capturing");
     target.style.width = prevWidth;     
-    btn.disabled = false; btn.textContent = orig;
+    btn.disabled = false; btn.innerHTML = orig;
   }
 }
 
@@ -1218,11 +1487,12 @@ function checkOverflow(){
 
 buildSpread();
 setToday();
+applyExcluded();
 recompute();
 checkOverflow();
 window.addEventListener("resize", checkOverflow);
 document.getElementById("resetBtn").addEventListener("click", resetAll);
-document.getElementById("pdfBtn").addEventListener("click", exportPDF);
+document.getElementById("pdfMiniBtn").addEventListener("click", exportPDF);
 
 /* =========================================================
    6) ⓘ 팝오버 + PDF/유튜브 모달
@@ -1308,18 +1578,31 @@ const API = "https://sugang-tan.vercel.app/api";
 let authToken = sessionStorage.getItem("sgToken") || null;
 let authUser  = JSON.parse(sessionStorage.getItem("sgUser") || "null");
 
+// JWT payload에서 role 추출
+function tokenRole(token){
+  try{ return JSON.parse(atob(token.split(".")[1])).role || "student"; }
+  catch{ return "student"; }
+}
+
 // 로그인 상태 UI 반영
 function applyAuthState(){
   const loggedIn = !!authToken;
+  const isAdmin = loggedIn && authUser && authUser.role === "admin";
+
+  document.body.classList.toggle("admin-mode", isAdmin);
   document.getElementById("userInfo").classList.toggle("on", loggedIn);
   document.getElementById("loginFormWrap").style.display = loggedIn ? "none" : "";
-  document.getElementById("loginMobileBtn").style.display = loggedIn ? "none" : "";
-  document.getElementById("saveBtn").style.display = loggedIn ? "" : "none";
-  document.getElementById("loadBtn").style.display = loggedIn ? "" : "none";
+  // 학생용 버튼은 admin이 아닐 때만
+  document.getElementById("saveBtn").style.display   = (loggedIn && !isAdmin) ? "" : "none";
+  document.getElementById("loadBtn").style.display   = (loggedIn && !isAdmin) ? "" : "none";
+  document.getElementById("submitBtn").style.display = (loggedIn && !isAdmin) ? "" : "none";
+
   if(loggedIn && authUser){
+    const who = isAdmin ? "관리자" : `${authUser.sid} ${authUser.name}`;
     document.getElementById("userGreeting").innerHTML =
-      `<b>${authUser.sid} ${authUser.name}</b>&nbsp;<span class="greeting">으로 접속 중</span>`;
+      `<b>${who}</b>&nbsp;<span class="greeting">으로 접속 중</span>`;
   }
+  if(isAdmin) initAdminPanel();
 }
 
 // 로그인 요청 공통 함수
@@ -1337,11 +1620,10 @@ async function doLogin(sid, name, pw, errEl, btnEl){
     const data = await res.json();
     if(!res.ok){ errEl.textContent = data.error || "로그인 실패"; return; }
     authToken = data.token;
-    authUser  = { sid: data.sid, name: data.name };
+    authUser  = { sid: data.sid, name: data.name, role: tokenRole(data.token) };
     sessionStorage.setItem("sgToken", authToken);
     sessionStorage.setItem("sgUser", JSON.stringify(authUser));
-    // 모달 닫기
-    document.getElementById("loginModal").classList.remove("on");
+    // 입력 초기화
     applyAuthState();
   } catch{
     errEl.textContent = "서버 연결 오류";
@@ -1363,28 +1645,6 @@ document.getElementById("loginBtn").addEventListener("click", () => {
 ["loginSid","loginName","loginPw"].forEach(id =>
   document.getElementById(id).addEventListener("keydown", e => {
     if(e.key === "Enter") document.getElementById("loginBtn").click();
-  })
-);
-
-// 모바일 로그인 모달
-document.getElementById("loginMobileBtn").addEventListener("click", () =>
-  document.getElementById("loginModal").classList.add("on"));
-document.getElementById("loginModalClose").addEventListener("click", () =>
-  document.getElementById("loginModal").classList.remove("on"));
-document.getElementById("loginModalBack").addEventListener("click", () =>
-  document.getElementById("loginModal").classList.remove("on"));
-document.getElementById("mLoginBtn").addEventListener("click", () => {
-  doLogin(
-    document.getElementById("mLoginSid").value.trim(),
-    document.getElementById("mLoginName").value.trim(),
-    document.getElementById("mLoginPw").value,
-    document.getElementById("mLoginErr"),
-    document.getElementById("mLoginBtn")
-  );
-});
-["mLoginSid","mLoginName","mLoginPw"].forEach(id =>
-  document.getElementById(id).addEventListener("keydown", e => {
-    if(e.key === "Enter") document.getElementById("mLoginBtn").click();
   })
 );
 
@@ -1410,9 +1670,11 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
   const kmeOk = cat.KME <= 8;
   const tlOk  = (cat.TECH + cat.LANG) >= 4;
   const artOk = cat.ART >= 2;
-  if(!allSemOk || !kmeOk || !tlOk || !artOk){
-    alert("모든 조건(학기별 과목 수, 교과군 필수요건)을 충족해야 저장할 수 있습니다.");
-    return;
+  const isComplete = allSemOk && kmeOk && tlOk && artOk;
+
+  // 미충족이어도 저장 가능 — 단 경고
+  if(!isComplete){
+    if(!confirm("조건에 부합하지 않습니다. 저장하시겠습니까?")) return;
   }
 
   const d = new Date();
@@ -1435,7 +1697,7 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
     const res = await fetch(API + "/roadmaps", {
       method:"POST",
       headers:{ "Content-Type":"application/json", "Authorization":"Bearer " + authToken },
-      body: JSON.stringify({ name: rdName, selections, isComplete: true })
+      body: JSON.stringify({ name: rdName, selections, excluded: collectExcluded(), isComplete })
     });
     const data = await res.json();
     if(!res.ok){ alert(data.error || "저장 실패"); return; }
@@ -1489,7 +1751,10 @@ async function fetchAndRenderRoadmaps() {
 
       const info = document.createElement("div");
       info.className = "rm-info";
-      info.innerHTML = `<div class="rm-name">${rd.name}</div>`;
+      const badge = rd.isComplete
+        ? `<span class="rm-badge ok">✓ 조건 충족</span>`
+        : `<span class="rm-badge bad">✗ 미충족</span>`;
+      info.innerHTML = `<div class="rm-name">${rd.name}</div><div class="rm-meta">${badge}</div>`;
 
       // 버튼들을 묶어줄 컨테이너
       const actions = document.createElement("div");
@@ -1539,6 +1804,14 @@ async function loadRoadmapData(id, name, loadBtn, delBtn) {
     if (!rd.selections) { alert("데이터를 불러올 수 없습니다."); return; }
 
     resetAll();
+    // 제외 목록 복원
+    excluded.clear();
+    if(rd.excluded){
+      Object.entries(rd.excluded).forEach(([semId, names]) => {
+        (names || []).forEach(nm => excluded.add(key(semId, nm)));
+      });
+    }
+    applyExcluded();
     Object.entries(rd.selections).forEach(([semId, courses]) => {
       courses.forEach(cName => {
         const btn = document.querySelector(`.course[data-sem="${semId}"][data-name="${CSS.escape(cName)}"]`);
@@ -1589,6 +1862,180 @@ document.getElementById("loadBtn").addEventListener("click", () => {
   showLoadModal();
   fetchAndRenderRoadmaps();
 });
+
+/* =========================================================
+   8) 제출하기 (submissions, 학번당 1건)
+   ========================================================= */
+function collectState(){
+  const semCount = {};
+  SEMESTERS.forEach(s => semCount[s.id] = 0);
+  const cat = { KME:0, TECH:0, LANG:0, ART:0 };
+  const selections = {};
+  SEMESTERS.forEach(s => selections[s.id] = []);
+  document.querySelectorAll('.course[aria-pressed="true"]').forEach(btn => {
+    semCount[btn.dataset.sem]++;
+    cat[btn.dataset.cat]++;
+    selections[btn.dataset.sem].push(btn.dataset.name);
+  });
+  const isComplete =
+    SEMESTERS.every(s => semCount[s.id] === s.need) &&
+    cat.KME <= 8 && (cat.TECH + cat.LANG) >= 4 && cat.ART >= 2;
+  return { selections, isComplete };
+}
+
+document.getElementById("submitBtn").addEventListener("click", async () => {
+  const { selections, isComplete } = collectState();
+  let msg = "본 제출은 가상의 수강신청 연습 및 상담용이며 실제 수강신청은 리로스쿨에서 진행됩니다. 제출하시겠습니까?";
+  if(!isComplete) msg = "현재 조건을 충족하지 않은 상태입니다.\n\n" + msg;
+  if(!confirm(msg)) return;
+
+  try{
+    const res = await fetch(API + "/submit", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json", "Authorization":"Bearer " + authToken },
+      body: JSON.stringify({ selections, excluded: collectExcluded(), isComplete })
+    });
+    const data = await res.json();
+    if(!res.ok){ alert(data.error || "제출 실패"); return; }
+    alert("제출이 완료되었습니다. (최종 제출본으로 저장됨)");
+  } catch{ alert("서버 연결 오류"); }
+});
+
+/* =========================================================
+   9) 관리자 패널
+   ========================================================= */
+const SEM_TITLE = { s21:"2학년 1학기", s22:"2학년 2학기", s31:"3학년 1학기", s32:"3학년 2학기" };
+let adminInited = false;
+
+function initAdminPanel(){
+  if(adminInited) return;
+  adminInited = true;
+
+  // 탭 전환
+  document.querySelectorAll(".atab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".atab").forEach(t => t.classList.remove("on"));
+      tab.classList.add("on");
+      const isOv = tab.dataset.tab === "overview";
+      document.getElementById("apOverview").hidden = !isOv;
+      document.getElementById("apClass").hidden = isOv;
+    });
+  });
+
+  // 반 선택 채우기 (1~13반)
+  const clsSel = document.getElementById("clsSel");
+  for(let i = 1; i <= 13; i++){
+    const v = "1" + String(i).padStart(2, "0");   // 101 ~ 113
+    const o = document.createElement("option");
+    o.value = v; o.textContent = i + "반";
+    clsSel.appendChild(o);
+  }
+
+  // 이벤트
+  document.getElementById("ovSem").addEventListener("change", loadOverview);
+  document.getElementById("ovCsvSem").addEventListener("click", () => downloadCsv(document.getElementById("ovSem").value));
+  document.getElementById("ovCsvAll").addEventListener("click", () => downloadCsv(null));
+  clsSel.addEventListener("change", loadClass);
+  document.getElementById("stuModalClose").addEventListener("click", closeStuModal);
+  document.getElementById("stuModalBack").addEventListener("click", closeStuModal);
+
+  // 초기 로드
+  loadOverview();
+  loadClass();
+}
+
+// 전체 현황
+async function loadOverview(){
+  const sem = document.getElementById("ovSem").value;
+  const stats = document.getElementById("ovStats");
+  const courses = document.getElementById("ovCourses");
+  stats.innerHTML = `<div class="ov-card"><div class="n">…</div></div>`;
+  courses.innerHTML = "";
+  try{
+    const res = await fetch(`${API}/admin/matrix?view=overview&semester=${sem}`, {
+      headers:{ "Authorization":"Bearer " + authToken }
+    });
+    const d = await res.json();
+    if(!res.ok){ stats.innerHTML = `<div class="ov-card no"><div class="t">${d.error||"오류"}</div></div>`; return; }
+    stats.innerHTML =
+      `<div class="ov-card"><div class="n">${d.totalStudents}</div><div class="t">전체</div></div>
+       <div class="ov-card sub"><div class="n">${d.submitted}</div><div class="t">제출</div></div>
+       <div class="ov-card no"><div class="n">${d.notSubmitted}</div><div class="t">미제출</div></div>`;
+    courses.innerHTML = d.courseCounts.map(c =>
+      `<div class="ovc-item ${c.count===0?"zero":""}"><span class="nm">${c.course}</span><span class="cnt">${c.count}</span></div>`
+    ).join("");
+  } catch{ stats.innerHTML = `<div class="ov-card no"><div class="t">서버 연결 오류</div></div>`; }
+}
+
+// CSV 다운로드 (인증 헤더 필요 → blob 처리)
+async function downloadCsv(sem){
+  try{
+    const url = `${API}/admin/matrix?download=1` + (sem ? `&semester=${sem}` : "");
+    const res = await fetch(url, { headers:{ "Authorization":"Bearer " + authToken } });
+    if(!res.ok){ alert("다운로드 실패"); return; }
+    const blob = await res.blob();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `수강신청_제출현황_${sem || "전체"}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(a.href);
+  } catch{ alert("서버 연결 오류"); }
+}
+
+// 학급별 현황
+async function loadClass(){
+  const cls = document.getElementById("clsSel").value;
+  const grid = document.getElementById("clsGrid");
+  grid.innerHTML = `<div class="cs-item none"><span class="dot"></span><span class="who"><span class="nm">불러오는 중…</span></span></div>`;
+  try{
+    const res = await fetch(`${API}/admin/matrix?view=class&cls=${cls}`, {
+      headers:{ "Authorization":"Bearer " + authToken }
+    });
+    const d = await res.json();
+    if(!res.ok){ grid.innerHTML = `<div class="cs-item none"><span class="who"><span class="nm">${d.error||"오류"}</span></span></div>`; return; }
+    if(!d.students.length){ grid.innerHTML = `<div class="cs-item none"><span class="who"><span class="nm">학생 명단이 없습니다.</span></span></div>`; return; }
+
+    grid.innerHTML = "";
+    d.students.forEach(s => {
+      const item = document.createElement("div");
+      const clickable = (s.status === "complete" || s.status === "draft");
+      item.className = `cs-item ${s.status}` + (clickable ? " clickable" : "");
+      item.innerHTML = `<span class="dot"></span><span class="who"><span class="sid">${s.sid}</span><span class="nm">${s.name}</span></span>`;
+      if(clickable) item.addEventListener("click", () => viewStudent(s.sid, s.name));
+      grid.appendChild(item);
+    });
+  } catch{ grid.innerHTML = `<div class="cs-item none"><span class="who"><span class="nm">서버 연결 오류</span></span></div>`; }
+}
+
+// 학생 제출 내역 상세 모달
+async function viewStudent(sid, name){
+  const body = document.getElementById("stuModalBody");
+  document.getElementById("stuModalTitle").textContent = `${sid} ${name} · 제출 내역`;
+  body.innerHTML = "불러오는 중…";
+  document.getElementById("stuModal").hidden = false;
+  document.body.style.overflow = "hidden";
+  try{
+    const res = await fetch(`${API}/admin/matrix?view=student&sid=${sid}`, {
+      headers:{ "Authorization":"Bearer " + authToken }
+    });
+    const d = await res.json();
+    if(!res.ok){ body.innerHTML = d.error || "오류"; return; }
+
+    const when = d.submittedAt ? new Date(d.submittedAt).toLocaleString("ko-KR") : "-";
+    let html = `<div class="stu-meta">제출 시각: ${when} · ${d.isComplete ? "✓ 조건 충족" : "✗ 미충족"}</div>`;
+    ["s21","s22","s31","s32"].forEach(sem => {
+      const list = (d.selections && d.selections[sem]) || [];
+      html += `<div class="stu-sem"><h4>${SEM_TITLE[sem]} (${list.length})</h4><div class="courses">` +
+        (list.length ? list.map(c => `<span class="c">${c}</span>`).join("") : `<span style="color:#999;font-size:12px">선택 없음</span>`) +
+        `</div></div>`;
+    });
+    body.innerHTML = html;
+  } catch{ body.innerHTML = "서버 연결 오류"; }
+}
+function closeStuModal(){
+  document.getElementById("stuModal").hidden = true;
+  document.body.style.overflow = "";
+}
 
 // 페이지 로드 시 세션 복원
 applyAuthState();

@@ -3,115 +3,134 @@ import jwt from "jsonwebtoken";
 
 const client = new MongoClient(process.env.MONGODB_URI);
 
-// 학기 표시 순서/이름
 const SEM_ORDER = ["s21", "s22", "s31", "s32"];
-const SEM_LABEL = { s21: "2-1", s22: "2-2", s31: "3-1", s32: "3-2" };
+const SEM_LABEL = { s21: "2학년 1학기", s22: "2학년 2학기", s31: "3학년 1학기", s32: "3학년 2학기" };
+const TEST_CLASS = "115";  // 15반 = 테스트용, 모든 집계에서 제외
 
-function verify(req) {
+// 학기별 선택과목 전체 목록 (열 순서/0명 과목 표시용)
+const SEM_COURSES = {
+  s21: ["주제 탐구 독서","기하","영미 문학 읽기","세계시민과 지리","현대사회와 윤리","법과 사회","동아시아 역사 기행","금융과 경제생활","물리학","화학","지구과학","세포와 물질대사","데이터 과학","스페인어","일본어","음악 연주와 창작","미술 창작"],
+  s22: ["문학과 영상","인공지능 수학","세계 문화와 영어","사회와 문화","세계사","정치","윤리문제 탐구","기후변화와 지속가능한 세계","생명과학","역학과 에너지","물질과 에너지","지구시스템과학","아동발달과 부모","스페인어 회화","일본어 회화","음악 감상과 비평","미술 감상과 비평"],
+  s31: ["독서 토론과 글쓰기","미적분Ⅱ","수학과제 탐구","심화 영어","윤리와 사상","경제","한국지리 탐구","사회문제 탐구","역사로 탐구하는 현대 세계","전자기와 양자","화학 반응의 세계","생물의 유전","행성우주과학","융합과학 탐구","소프트웨어와 생활","일본 문화","음악과 미디어","미술과 매체"],
+  s32: ["매체 의사소통","언어생활 탐구","수학과 문화","실용 통계","심화 영어 독해와 작문","미디어 영어","국제 관계의 이해","인문학과 윤리","도시의 미래 탐구","여행지리","과학의 역사와 문화","기후변화와 환경생태","지식 재산 일반","스페인어권 문화","심화 일본어","음악콘텐츠 제작 기초","조형탐구1"]
+};
+
+function verify(req){
   const auth = req.headers.authorization || "";
   return jwt.verify(auth.replace("Bearer ", ""), process.env.JWT_SECRET);
 }
-
-// CSV 셀 escape (콤마/따옴표/줄바꿈 처리)
-function cell(v) {
+function cell(v){
   const s = String(v ?? "");
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
+const isTest = sid => String(sid).slice(0, 3) === TEST_CLASS;
 
-export default async function handler(req, res) {
-  // ===== CORS 허용 =====
+export default async function handler(req, res){
+  // ===== CORS =====
   res.setHeader("Access-Control-Allow-Origin", "https://csolutn.github.io");
   res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (req.method === "OPTIONS") return res.status(200).end();
-  // =====================
+  // ================
 
   if (req.method !== "GET")
     return res.status(405).json({ error: "Method not allowed" });
 
-  // 관리자 인증
   let user;
   try { user = verify(req); }
   catch { return res.status(401).json({ error: "로그인이 필요합니다." }); }
   if (user.role !== "admin")
     return res.status(403).json({ error: "관리자만 접근할 수 있습니다." });
 
-  const { semester, download } = req.query;
-  const semesters = semester && SEM_ORDER.includes(semester)
-    ? [semester] : SEM_ORDER;
-
   await client.connect();
   const db = client.db("sugang");
+  const subCol = db.collection("submissions");
+  const stuCol = db.collection("students");
 
-  // 1) 학생별 가장 최근 로드맵 1건만 선택 (savedAt 내림차순 → 그룹 첫 항목)
-  const latest = await db.collection("roadmaps").aggregate([
-    { $sort: { savedAt: -1 } },
-    { $group: {
-        _id: "$sid",
-        name: { $first: "$name" },
-        selections: { $first: "$selections" },
-        savedAt: { $first: "$savedAt" }
-    }}
-  ]).toArray();
+  const view = req.query.view || "overview";
 
-  // 2) 학생 이름 매핑 (students 컬렉션)
-  const students = await db.collection("students")
-    .find({}, { projection: { sid: 1, name: 1 } }).toArray();
-  const nameOf = {};
-  students.forEach(s => { nameOf[s.sid] = s.name; });
+  // ---------- 학생 1명 상세 (제출 내역) ----------
+  if (view === "student") {
+    const sid = req.query.sid;
+    const sub = await subCol.findOne({ sid });
+    if (!sub) return res.status(404).json({ error: "제출 내역이 없습니다." });
+    return res.status(200).json(sub);
+  }
 
-  // 3) 학기별 결과 구성
-  const result = {};   // { s21: { columns:[과목...], rows:[{sid,name,values:[0/1...]}] }, ... }
+  // ---------- 학급별 현황 ----------
+  if (view === "class") {
+    const cls = req.query.cls;  // 예: "101"
+    if (!cls) return res.status(400).json({ error: "학급(cls)을 지정하세요." });
 
-  semesters.forEach(sem => {
-    // 해당 학기에 등장하는 과목 집합 수집
-    const courseSet = new Set();
-    latest.forEach(rd => {
-      (rd.selections?.[sem] || []).forEach(c => courseSet.add(c));
+    const roster = await stuCol
+      .find({ role: "student" }, { projection: { sid: 1, name: 1 } })
+      .toArray();
+    const inClass = roster
+      .filter(s => String(s.sid).slice(0, 3) === cls && !isTest(s.sid))
+      .sort((a, b) => String(a.sid).localeCompare(String(b.sid)));
+
+    const subs = await subCol.find({ cls }).toArray();
+    const subMap = {};
+    subs.forEach(s => { if (!isTest(s.sid)) subMap[s.sid] = s; });
+
+    const students = inClass.map(s => {
+      const sub = subMap[s.sid];
+      let status = "none";
+      if (sub) status = sub.isComplete ? "complete" : "draft";
+      return { sid: s.sid, name: s.name, status };
     });
-    const columns = [...courseSet].sort((a, b) => a.localeCompare(b, "ko"));
 
-    // 학생별 0/1 행 생성 (sid 오름차순)
-    const rows = latest
-      .slice()
-      .sort((a, b) => String(a._id).localeCompare(String(b._id)))
-      .map(rd => {
-        const picked = new Set(rd.selections?.[sem] || []);
-        return {
-          sid: rd._id,
-          name: nameOf[rd._id] || rd.name || "",
-          values: columns.map(c => (picked.has(c) ? 1 : 0))
-        };
-      });
+    return res.status(200).json({ cls, students });
+  }
 
-    result[sem] = { columns, rows };
+  // ---------- 전체 현황 + CSV ----------
+  const allStudents = await stuCol
+    .find({ role: "student" }, { projection: { sid: 1 } }).toArray();
+  const totalStudents = allStudents.filter(s => !isTest(s.sid)).length;
+
+  const subs = (await subCol.find({}).toArray()).filter(s => !isTest(s.sid));
+  const submitted = subs.length;
+
+  const semester = SEM_ORDER.includes(req.query.semester) ? req.query.semester : "s21";
+
+  const courses = SEM_COURSES[semester];
+  const courseCount = {};
+  courses.forEach(c => courseCount[c] = 0);
+  subs.forEach(sub => {
+    (sub.selections?.[semester] || []).forEach(c => {
+      if (c in courseCount) courseCount[c]++;
+    });
   });
 
-  // 4) CSV 다운로드 요청이면 CSV로 응답
-  if (download) {
+  // CSV 다운로드
+  if (req.query.download) {
+    const semList = req.query.semester ? [semester] : SEM_ORDER;
     let csv = "";
-    semesters.forEach((sem, i) => {
+    semList.forEach((sem, i) => {
       if (i > 0) csv += "\n\n";
-      csv += `[${SEM_LABEL[sem]} 학기]\n`;
-      const { columns, rows } = result[sem];
-      // 헤더
-      csv += ["학번", "이름", ...columns].map(cell).join(",") + "\n";
-      // 본문
-      rows.forEach(r => {
-        csv += [r.sid, r.name, ...r.values].map(cell).join(",") + "\n";
-      });
+      const cols = SEM_COURSES[sem];
+      csv += `[${SEM_LABEL[sem]}]\n`;
+      csv += ["학번", "이름", ...cols].map(cell).join(",") + "\n";
+      subs
+        .slice()
+        .sort((a, b) => String(a.sid).localeCompare(String(b.sid)))
+        .forEach(sub => {
+          const picked = new Set(sub.selections?.[sem] || []);
+          csv += [sub.sid, sub.name, ...cols.map(c => (picked.has(c) ? 1 : 0))]
+            .map(cell).join(",") + "\n";
+        });
     });
-
-    const fname = `sugang_matrix_${semester || "all"}_${Date.now()}.csv`;
+    const fname = `sugang_submissions_${req.query.semester || "all"}_${Date.now()}.csv`;
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader("Content-Disposition", `attachment; filename="${fname}"`);
-    // 엑셀 한글 깨짐 방지용 BOM
     return res.status(200).send("\uFEFF" + csv);
   }
 
-  // 5) 기본: JSON 미리보기
   return res.status(200).json({
-    studentCount: latest.length,
-    semesters: result
+    semester,
+    totalStudents,
+    submitted,
+    notSubmitted: totalStudents - submitted,
+    courseCounts: courses.map(c => ({ course: c, count: courseCount[c] }))
   });
 }
