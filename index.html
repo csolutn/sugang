@@ -1799,7 +1799,9 @@ document.getElementById("loadModalBack").addEventListener("click", closeLoadModa
 async function fetchAndRenderRoadmaps() {
   const listContainer = document.getElementById("loadModalList");
   const errEl = document.getElementById("loadModalErr");
-  listContainer.innerHTML = "";
+  
+  // [수정] 데이터를 기다리는 동안 목록 영역에 간단한 텍스트만 표시
+  listContainer.innerHTML = `<div class="rm-empty">임시저장된 로드맵을 불러오는 중...</div>`;
   errEl.textContent = "";
 
   try {
@@ -1810,6 +1812,7 @@ async function fetchAndRenderRoadmaps() {
     
     if (!res.ok) {
       errEl.textContent = list.error || "목록을 불러오지 못했습니다.";
+      listContainer.innerHTML = "";
       return;
     }
 
@@ -1818,6 +1821,7 @@ async function fetchAndRenderRoadmaps() {
       return;
     }
 
+    listContainer.innerHTML = ""; // 로딩 문구 지우고 목록 그리기 시작
     list.forEach(rd => {
       const item = document.createElement("div");
       item.className = "rm-item";
@@ -1829,23 +1833,19 @@ async function fetchAndRenderRoadmaps() {
         : `<span class="rm-badge bad">✗ 미충족</span>`;
       info.innerHTML = `<div class="rm-name">${rd.name}</div><div class="rm-meta">${badge}</div>`;
 
-      // 버튼들을 묶어줄 컨테이너
       const actions = document.createElement("div");
       actions.className = "rm-actions";
 
-      // 불러오기 버튼 생성
       const loadBtn = document.createElement("button");
       loadBtn.type = "button";
       loadBtn.className = "rm-load-btn";
       loadBtn.textContent = "불러오기";
 
-      // 삭제 버튼 생성
       const delBtn = document.createElement("button");
       delBtn.type = "button";
       delBtn.className = "rm-del-btn";
       delBtn.textContent = "삭제";
 
-      // 이벤트 연결 시 버튼 자신과 상대방 버튼의 요소를 같이 넘겨줌
       loadBtn.addEventListener("click", () => loadRoadmapData(rd._id, rd.name, loadBtn, delBtn));
       delBtn.addEventListener("click", () => deleteRoadmapData(rd._id, rd.name, loadBtn, delBtn));
 
@@ -1858,14 +1858,15 @@ async function fetchAndRenderRoadmaps() {
     });
   } catch {
     errEl.textContent = "서버 연결 오류가 발생했습니다.";
+    listContainer.innerHTML = "";
   }
 }
 
 // 선택한 파일 데이터 화면 로드
 async function loadRoadmapData(id, name, loadBtn, delBtn) {
-  // 상태 변경 (로딩 중 표시 및 버튼 비활성화)
+  // [수정] 해당 항목의 버튼 텍스트만 '불러오는 중...'으로 변경하고 비활성화
   const origText = loadBtn.textContent;
-  loadBtn.textContent = "불러오는 중";
+  loadBtn.textContent = "불러오는 중...";
   loadBtn.disabled = true;
   delBtn.disabled = true;
 
@@ -1897,7 +1898,7 @@ async function loadRoadmapData(id, name, loadBtn, delBtn) {
   } catch {
     alert("서버 연결 오류");
   } finally {
-    // 혹시 모달이 안 닫히고 에러가 났을 경우를 대비해 원래 상태 복구
+    // 완료 시 버튼 상태 원래대로 복구
     loadBtn.textContent = origText;
     loadBtn.disabled = false;
     delBtn.disabled = false;
