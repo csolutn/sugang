@@ -138,10 +138,7 @@ export default async function handler(req, res){
   // [개선 5] totalStudents는 countDocuments로 단순 카운트 (전체 도큐먼트 로드 불필요)
   // [개선 6] submissions: CSV는 sid+name+selections 필요, overview는 sid+selections만 필요
   //          → CSV 여부에 따라 projection 분기
-  const needName   = !!req.query.download;  // CSV 시에만 name 필요
-  const subProj    = needName
-    ? { sid: 1, name: 1, selections: 1, _id: 0 }
-    : { sid: 1, selections: 1, _id: 0 };
+  const subProj = { sid: 1, selections: 1, _id: 0 };
 
   const [totalStudents, allSubs] = await Promise.all([
     // ① 전교생 수 — 도큐먼트 로드 없이 카운트만
@@ -162,21 +159,36 @@ export default async function handler(req, res){
 
   // CSV 다운로드
   if (req.query.download) {
+    // 미제출 학생도 포함하기 위해 전체 학생 명단 추가 조회
+    const allStudents = await stuCol
+      .find(
+        { role: "student", sid: { $not: { $regex: `^${TEST_CLASS}` } } },
+        { projection: { sid: 1, _id: 0 } }
+      )
+      .sort({ sid: 1 })
+      .toArray();
+
+    // 제출 데이터를 학번 기준 Map으로 변환
+    const subMap = new Map(subs.map(s => [s.sid, s]));
+
     const semList = req.query.semester ? [semester] : SEM_ORDER;
     let csv = "";
     semList.forEach((sem, i) => {
       if (i > 0) csv += "\n\n";
       const cols = SEM_COURSES[sem];
+
+      // 헤더: 학번, 상태, 과목1, 과목2...
       csv += `[${SEM_LABEL[sem]}]\n`;
-      csv += ["학번", "이름", ...cols].map(cell).join(",") + "\n";
-      subs
-        .slice()
-        .sort((a, b) => String(a.sid).localeCompare(String(b.sid)))
-        .forEach(sub => {
-          const picked = new Set(sub.selections?.[sem] || []);
-          csv += [sub.sid, sub.name, ...cols.map(c => (picked.has(c) ? 1 : 0))]
-            .map(cell).join(",") + "\n";
-        });
+      csv += ["학번", "상태", ...cols].map(cell).join(",") + "\n";
+
+      // 전체 학생 순서대로 출력 (미제출 포함)
+      allStudents.forEach(stu => {
+        const sub   = subMap.get(stu.sid);
+        const state = sub ? "제출" : "미제출";
+        const picked = new Set(sub?.selections?.[sem] || []);
+        csv += [stu.sid, state, ...cols.map(c => (picked.has(c) ? 1 : 0))]
+          .map(cell).join(",") + "\n";
+      });
     });
     const fname = `sugang_submissions_${req.query.semester || "all"}_${Date.now()}.csv`;
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
